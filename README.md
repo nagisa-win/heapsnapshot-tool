@@ -6,7 +6,8 @@
 pnpm install
 ```
 
-> [知识库文档](https://ku.baidu-int.com/d/KLfeTfgWdfcCzL)
+[
+](https://ku.baidu-int.com/d/KLfeTfgWdfcCzL)
 
 ## Quick Start
 
