@@ -6,8 +6,16 @@ import {HasSearchLog} from './constants.js';
  */
 export class Graph {
     graph = null;
-    nodes = {};
-    edges = [];
+    _nodes = {};
+    _edges = [];
+
+    get nodes() {
+        return this._nodes;
+    }
+
+    get edges() {
+        return this._edges;
+    }
 
     constructor(json) {
         this.graph = this._getGraph(json);
@@ -35,16 +43,6 @@ export class Graph {
             console.error(e);
             return null;
         }
-    }
-
-    get nodes() {
-        if (!this.nodes) return undefined;
-        return this.nodes;
-    }
-
-    get edges() {
-        if (!this.edges) return undefined;
-        return this.edges;
     }
 
     get nodeLen() {
@@ -144,8 +142,8 @@ export class Graph {
                 edgeOffset += node.edge_count * this.edgeLen;
                 nodes[node.id] = {...node, edges: node_edges};
             }
-            this.nodes = nodes;
-            // this.edges = edges;
+            this._nodes = nodes;
+            this._edges = [];
             resolve();
         });
     }
@@ -158,10 +156,10 @@ export class Graph {
      * @param nodes 节点集合，默认为当前实例的nodes属性
      * @returns 返回满足条件的节点数组
      */
-    findNode(property, val, nodes = this.nodes) {
+    findNode(property, val, nodes = this._nodes) {
         return new Promise((resolve, reject) => {
             const ret = _.filter(_.values(nodes), node => {
-                if (val instanceof RegExp && val.test(node[property])) {
+                if (val instanceof RegExp && node[property] !== undefined && val.test(node[property])) {
                     return true;
                 }
                 if (node[property] === val) {
@@ -184,19 +182,19 @@ export class Graph {
      */
     hasEdge(nodeWithEdges, property, val) {
         if (!nodeWithEdges.edges) {
-            reject('nodeWithEdges.edges is undefined');
+            throw new Error('nodeWithEdges.edges is undefined');
         }
         const edges = nodeWithEdges.edges;
-        let ret = false;
         for (let i = 0; i < edges.length; ++i) {
-            if (val instanceof RegExp && val.test(edges[i][property])) {
-                ret = true;
-            }
-            if (edges[i][property] === val) {
-                ret = true;
+            if (val instanceof RegExp) {
+                if (edges[i][property] !== undefined && val.test(edges[i][property])) {
+                    return true;
+                }
+            } else if (edges[i][property] === val) {
+                return true;
             }
         }
-        return ret;
+        return false;
     }
 
     // getNodeEdges(nodes) {
@@ -224,7 +222,7 @@ export class Graph {
     traceNodes(fromNodes) {
         const total = this.graph.nodeCount;
         return new Promise((resolve, reject) => {
-            if (!this.nodes) {
+            if (!this._nodes) {
                 reject('call `getAll()` first');
             }
             let size = 0;
@@ -258,10 +256,10 @@ export class Graph {
                 visited[node.id] = true;
                 for (let i = 0; i < node.edges.length; ++i) {
                     const edge = node.edges[i];
-                    if (visited[edge.to] || !this.nodes[edge.to]) {
+                    if (visited[edge.to] || !this._nodes[edge.to]) {
                         continue;
                     }
-                    const target = this.nodes[edge.to];
+                    const target = this._nodes[edge.to];
                     if (
                         [
                             'string',

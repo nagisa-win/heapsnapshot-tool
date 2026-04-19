@@ -1,8 +1,6 @@
 import dayjs from 'dayjs';
 import fs from 'fs';
 
-const timeMap = {};
-
 export function getDateTime(format = 'YYYY-MM-DD HH:mm:ss.SSS') {
     return dayjs().format(format);
 }
@@ -24,6 +22,17 @@ export function parseSize(bytes) {
     return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
+export function parseJSON(str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.error('JSON parse error:\n', e);
+        return {};
+    }
+}
+
+const timeMap = {};
+
 export function time(str) {
     timeMap[str] = Date.now();
 }
@@ -33,21 +42,6 @@ export function timeEnd(str) {
     const time = Date.now() - timeMap[str];
     log(`\x1b[91m[TIME] ${str}: ${parseTime(time)}\x1b[0m`);
     timeMap[str] = undefined;
-}
-
-/**
- * 解析JSON字符串
- *
- * @param {string} str 要解析的JSON字符串
- * @returns {object} 解析后的JSON对象
- */
-export function parseJSON(str) {
-    try {
-        return JSON.parse(str);
-    } catch (e) {
-        console.error('JSON parse error:\n', e);
-        return {};
-    }
 }
 
 export function readDir(path) {
